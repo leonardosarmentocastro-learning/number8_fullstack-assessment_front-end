@@ -2,25 +2,13 @@ import Image from 'next/image';
 
 export default function EmployeesPage() {
   return (
-    <main className="p-8 h-screen bg-[#1D2025] overflow-y-scroll">
-      <div className='flex flex-row justify-between'>
-        <span className="material-symbols-outlined w-[2.4rem] h-[2.4rem]">menu</span>
-
-        <Image
-          src='/number8-logo.svg'
-          alt='Number8 logo'
-          className='w-[10rem] h-[3.3rem]'
-          width='0'
-          height='0'
-        />
-      </div>
-
+    <div>
       <div className='mt-12'>
         <h1 className='text-[2.4rem] md:text-[4rem] text-[#fff] font-semibold'>Employees</h1>
         <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>Click on “view details” for further inspection and possibly change an employee's information.</p>
       </div>
 
-      <div className='mt-8 flex flex-col md:flex-row justify-between items-end'>
+      <div className='mt-8 flex flex-col md:flex-row justify-between items-center md:items-end'>
         <div className='flex flex-col lg:flex-row lg:gap-4 w-full md:max-w-[28rem] lg:max-w-[60rem]'>
           <div className='flex flex-col w-full'>
             <label
@@ -98,6 +86,6 @@ export default function EmployeesPage() {
           </div>
         ))}
       </div>
-    </main>
+    </div>
   );
 }
