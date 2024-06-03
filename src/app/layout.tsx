@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={josefinSans.className}>
-        <main className="p-8 h-screen bg-[#1D2025] overflow-y-scroll">
+        <main className="h-screen bg-[#1D2025] overflow-y-scroll">
           {children}
         </main>
       </body>

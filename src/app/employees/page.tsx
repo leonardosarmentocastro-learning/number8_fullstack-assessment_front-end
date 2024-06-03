@@ -2,8 +2,8 @@ import Image from 'next/image';
 
 export default function EmployeesPage() {
   return (
-    <div>
-      <div className='mt-12'>
+    <div className='p-8'>
+      <div className='mt-12 lg:mt-8'>
         <h1 className='text-[2.4rem] md:text-[4rem] text-[#fff] font-semibold'>Employees</h1>
         <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>Click on “view details” for further inspection and possibly change an employee's information.</p>
       </div>
