@@ -1,6 +1,45 @@
+'use client';
+
 import Image from 'next/image';
 
+import { useTextInput, Validate } from '../../../ui';
+
+const validateEmptyness: Validate = ({ setError, value }) => {
+  if (!value) return setError("Can't be empty");
+  setError('');
+};
+
 export default function NewEmployeePage() {
+  const {
+    Component: FirstNameInput,
+    error: firstNameError,
+    value: firstName,
+  } = useTextInput({
+    label: 'First name',
+    placeholder: 'Leonardo',
+    validate: validateEmptyness
+  });
+
+  const {
+    Component: LastNameInput,
+    error: lastNameError,
+    value: lastName,
+  } = useTextInput({
+    label: 'Last name',
+    placeholder: 'Sarmento de Castro',
+    validate: validateEmptyness
+  });
+
+  const {
+    Component: PhoneInput,
+    error: phoneError,
+    value: phone,
+  } = useTextInput({
+    label: 'Phone number',
+    placeholder: '(12) 98127-6618',
+    validate: validateEmptyness
+  });
+
   return (
     <div className='p-8'>
       <div className='mt-12 lg:mt-8'>
@@ -33,59 +72,9 @@ export default function NewEmployeePage() {
           <h1 className='text-[1.6rem] md:text-[2.4rem] text-[#DAFDCC] font-semibold'>Personal information</h1>
 
           <div className='flex flex-col md:flex-row gap-8'>
-            <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
-              <label
-                className='text-[1.4rem] md:text-[1.6rem] text-[#fff] font-semibold'
-              >
-                First name
-              </label>
-
-              <div className='relative'>
-                {/* <span className="material-symbols-outlined absolute top-[1rem] left-[1rem] text-[2.4rem] text-[rgba(0,0,0,.5)] fill-current">search</span> */}
-
-                <input
-                  type='text'
-                  className='text-[1.6rem] bg-[#F0EDEB] text-[rgba(0,0,0,.5)] rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pl-[1rem] pr-[.5rem] w-full'
-                  placeholder='Leonardo'
-                />
-              </div>
-            </div>
-
-            <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
-              <label
-                className='text-[1.4rem] md:text-[1.6rem] text-[#fff] font-semibold'
-              >
-                Last name
-              </label>
-
-              <div className='relative'>
-                {/* <span className="material-symbols-outlined absolute top-[1rem] left-[1rem] text-[2.4rem] text-[rgba(0,0,0,.5)] fill-current">search</span> */}
-
-                <input
-                  type='text'
-                  className='text-[1.6rem] bg-[#F0EDEB] text-[rgba(0,0,0,.5)] rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pl-[1rem] pr-[.5rem] w-full'
-                  placeholder='Sarmento de Castro'
-                />
-              </div>
-            </div>
-
-            <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
-              <label
-                className='text-[1.4rem] md:text-[1.6rem] text-[#fff] font-semibold'
-              >
-                Phone number
-              </label>
-
-              <div className='relative'>
-                {/* <span className="material-symbols-outlined absolute top-[1rem] left-[1rem] text-[2.4rem] text-[rgba(0,0,0,.5)] fill-current">search</span> */}
-
-                <input
-                  type='text'
-                  className='text-[1.6rem] bg-[#F0EDEB] text-[rgba(0,0,0,.5)] rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pl-[1rem] pr-[.5rem] w-full'
-                  placeholder='(12) 98127-6618'
-                />
-              </div>
-            </div>
+            {FirstNameInput}
+            {LastNameInput}
+            {PhoneInput}
           </div>
         </div>
 
@@ -255,26 +244,30 @@ export default function NewEmployeePage() {
           <div className='flex flex-col'>
             <h1 className='text-[1.6rem] md:text-[2.4rem] text-[#98A1A8] font-semibold'>Department History</h1>
 
-            <table className='text-left text-[1.2rem] md:text-[1.4rem] font-semibold'>
-              <tr className='border-b border-[#D9D9D9] md:text-[1.6rem]'>
-                <th className='px-4 py-3'>Date</th>
-                <th className='px-4 py-3'>Department</th>
-              </tr>
+            <table className='text-[#fff] text-left text-[1.2rem] md:text-[1.4rem] font-semibold'>
+              <thead>
+                <tr className='border-b border-[#D9D9D9] md:text-[1.6rem]'>
+                  <th className='px-4 py-3'>Date</th>
+                  <th className='px-4 py-3'>Department</th>
+                </tr>
+              </thead>
 
-              <tr className='border-t border-[rgba(217,217,217,.35)] bg-[rgba(217,217,217,.2)]'>
-                <td className='px-4 py-3'>30/05/2024 23:00:00</td>
-                <td className='px-4 py-3'>Technology</td>
-              </tr>
+              <tbody>
+                <tr className='border-t border-[rgba(217,217,217,.35)] bg-[rgba(217,217,217,.2)]'>
+                  <td className='px-4 py-3'>30/05/2024 23:00:00</td>
+                  <td className='px-4 py-3'>Technology</td>
+                </tr>
 
-              <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                <td className='px-4 py-3'>30/05/2024 22:00:00</td>
-                <td className='px-4 py-3'>Human resources</td>
-              </tr>
+                <tr className='border-t border-[rgba(217,217,217,.35)]'>
+                  <td className='px-4 py-3'>30/05/2024 22:00:00</td>
+                  <td className='px-4 py-3'>Human resources</td>
+                </tr>
 
-              <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                <td className='px-4 py-3'>30/05/2024 21:00:00</td>
-                <td className='px-4 py-3'>Finances</td>
-              </tr>
+                <tr className='border-t border-[rgba(217,217,217,.35)]'>
+                  <td className='px-4 py-3'>30/05/2024 21:00:00</td>
+                  <td className='px-4 py-3'>Finances</td>
+                </tr>
+              </tbody>
             </table>
           </div>
         </div>
