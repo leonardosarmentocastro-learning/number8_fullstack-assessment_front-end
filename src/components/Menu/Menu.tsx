@@ -1,18 +1,28 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
-type Props = { toggleMenu: React.MouseEventHandler<HTMLSpanElement> };
+type Props = { toggleMenu: (ev?: React.SyntheticEvent) => void };
 export const Menu = ({ toggleMenu }: Props) => {
   const pathname = usePathname();
+  const router = useRouter();
 
   const isAtNewEmployee = pathname.includes('/employees/');
   const isAtViewAllEmployees = pathname === '/employees';
   const employeeStartsExpanded = (isAtNewEmployee || isAtViewAllEmployees);
   const [ isEmployeesExpanded, setIsEmployeeExpanded ] = useState(employeeStartsExpanded);
   const toggleEmployeesItems = () => setIsEmployeeExpanded(prev => !prev);
+
+  const goToNewEmployee = async () => {
+    await router.push('/employees/new');
+    toggleMenu();
+  };
+  const goToViewEmployees = async () => {
+    await router.push('/employees');
+    toggleMenu();
+  };
 
   return (
     <nav className='absolute lg:static z-40 lg:z-0 h-full w-[30rem] bg-[#2D3039] lg:bg-[#1D2025] lg:border-r lg:border-[rgba(217,217,217,.2)]'>
@@ -62,8 +72,18 @@ export const Menu = ({ toggleMenu }: Props) => {
 
         {isEmployeesExpanded && (
           <div>
-            <p className={`pl-36 py-2 text-[1.4rem] text-[#fff] font-semibold ${isAtNewEmployee ? 'bg-[rgba(217,217,217,.2)]' : ''}`}>Create new</p>
-            <p className={`pl-36 py-2 text-[1.4rem] text-[#fff] font-semibold ${isAtViewAllEmployees ? 'bg-[rgba(217,217,217,.2)]' : ''}`}>View all</p>
+            <p
+              className={`pl-36 py-2 text-[1.4rem] text-[#fff] font-semibold ${isAtNewEmployee ? 'bg-[rgba(217,217,217,.2)]' : ''}`}
+              onClick={goToNewEmployee}
+            >
+              Create new
+            </p>
+            <p
+              className={`pl-36 py-2 text-[1.4rem] text-[#fff] font-semibold ${isAtViewAllEmployees ? 'bg-[rgba(217,217,217,.2)]' : ''}`}
+              onClick={goToViewEmployees}
+            >
+              View all
+            </p>
           </div>
         )}
       </div>
