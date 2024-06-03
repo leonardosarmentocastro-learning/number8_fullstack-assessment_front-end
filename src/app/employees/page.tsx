@@ -22,7 +22,7 @@ export default function EmployeesPage() {
 
               <input
                 type='text'
-                className='text-[1.6rem] bg-[#F0EDEB] text-[rgba(0,0,0,.5)] rounded-[.5rem] py-[1rem] pl-[4rem] pr-[.5rem] w-full'
+                className='text-[1.6rem] bg-[#F0EDEB] text-[rgba(0,0,0,.5)] rounded-[.5rem] pt-[1.2rem] pb-[.8rem] pl-[4rem] pr-[.5rem] w-full'
                 placeholder='Department or employee name'
               />
             </div>

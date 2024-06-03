@@ -7,7 +7,7 @@ import "./icons.css";
 const josefinSans = Josefin_Sans({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Front-end assessment",
+  title: "Full-stack assessment",
   description: "by Leonardo Sarmento de Castro",
 };
 
