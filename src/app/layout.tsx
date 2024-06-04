@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SWRConfig } from 'swr';
 import { /* Reddit_Mono, */ Josefin_Sans } from "next/font/google";
 import "./globals.css";
 import "./icons.css";

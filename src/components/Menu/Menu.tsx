@@ -28,7 +28,7 @@ export const Menu = ({ toggleMenu }: Props) => {
     <nav className='absolute lg:static z-40 lg:z-0 h-full w-[30rem] bg-[#2D3039] lg:bg-[#1D2025] lg:border-r lg:border-[rgba(217,217,217,.2)]'>
       <div className='lg:hidden p-8 border-b border-[rgba(217,217,217,.2)]'>
         <span
-          className="material-symbols-outlined w-[2.4rem] h-[2.4rem] cursor-pointer"
+          className="material-symbols-outlined w-[2.4rem] h-[2.4rem] cursor-pointer text-[#fff]"
           onClick={toggleMenu}
         >
           arrow_back
@@ -51,7 +51,7 @@ export const Menu = ({ toggleMenu }: Props) => {
       >
         <div className='p-8 flex flex-row gap-8'>
           <span
-            className="material-symbols-outlined w-[2.4rem] h-[2.4rem]"
+            className="material-symbols-outlined w-[2.4rem] h-[2.4rem] text-[#fff]"
           >
             person
           </span>
@@ -63,7 +63,7 @@ export const Menu = ({ toggleMenu }: Props) => {
             </div>
 
             <span
-              className="material-symbols-outlined w-[2.4rem] h-[2.4rem]"
+              className="material-symbols-outlined w-[2.4rem] h-[2.4rem] text-[#fff]"
             >
               {isEmployeesExpanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
             </span>

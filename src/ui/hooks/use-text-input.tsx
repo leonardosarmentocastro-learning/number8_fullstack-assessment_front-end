@@ -16,9 +16,12 @@ type EventHandler = (args: {
   value?: string,
 }) => void;
 type Props = {
+  adornment?: string,
+  classNames?: string,
   defaultError?: string,
   defaultValue?: string,
   disabled?: boolean,
+  id?: string,
   onBlur?: EventHandler,
   onChange?: (ev: React.SyntheticEvent) => void,
   onFocus?: (ev: React.FocusEvent<HTMLInputElement>) => void,
@@ -26,24 +29,33 @@ type Props = {
   label?: string,
   minRows?: Number,
   multiline?: boolean,
+  name?: string,
+  options?: {
+    strictSize: boolean,
+  },
   placeholder?: string,
   ref?: React.Ref<any>,
   title?: string,
   type?: string,
-  validate: Validate,
+  validate?: Validate,
 };
 
 export const useTextInput = ({
+  adornment = '',
+  classNames = '',
   defaultValue = '',
   defaultError = '',
   disabled = false,
+  id = '',
   label = '',
   minRows = 0,
   multiline = false,
+  name = '',
   onBlur,
   onChange,
   onFocus,
   onKeyPress,
+  options = { strictSize: true },
   placeholder = '',
   ref = null,
   // title,
@@ -58,7 +70,7 @@ export const useTextInput = ({
   const __onChange__ = useCallback((e: InputChange) => {
     const newValue = e.target.value;
     setValue(newValue);
-    validate({ setError, value: newValue });
+    !!validate && validate({ setError, value: newValue });
 
     !!onChange && onChange(e);
   }, [
@@ -84,27 +96,31 @@ export const useTextInput = ({
   );
 
   const Component = useMemo(() => (
-    <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
+    <div className={`flex flex-col w-full ${options.strictSize ? 'md:max-w-[21.5rem] lg:w-[23rem]' : ''} ${classNames}`.trim()}>
       <label
         className={`text-[1.4rem] md:text-[1.6rem] font-semibold ${error ? 'text-[#FF7D7B]' : !!value ? 'text-[#DAFDCC]' : 'text-[#fff]'}`}
+        htmlFor={id}
       >
         {inputLabel}
       </label>
 
       <div className='relative'>
-        {/* TODO: addornement */}
-        {/* <span className="material-symbols-outlined absolute top-[1rem] left-[1rem] text-[2.4rem] text-[rgba(0,0,0,.5)] fill-current">search</span> */}
+        {!!adornment && (
+          <span className="material-symbols-outlined absolute top-[1rem] left-[1rem] text-[2.4rem] text-[rgba(0,0,0,.5)] fill-current">{adornment}</span>
+        )}
 
         <input
-          className={`text-[1.6rem] bg-[#F0EDEB] text-black rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pl-[1rem] pr-[.5rem] w-full border ${error ? 'border-[#FF7D7B]' : 'border-[#fff]'}`}
+          className={`text-[1.6rem] bg-[#F0EDEB] text-black rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pr-[.5rem] w-full border ${adornment ? 'pl-[4rem]' : 'pl-[1rem]'} ${error ? 'border-[#FF7D7B]' : 'border-[#fff]'}`}
           disabled={disabled}
-          type={inputType}
-          placeholder={placeholder}
           onChange={__onChange__}
           onBlur={__onBlur__}
           onFocus={onFocus}
           onKeyDown={__onKeyPress__}
+          id={id}
+          name={name}
+          placeholder={placeholder}
           ref={ref}
+          type={inputType}
           value={value}
         />
       </div>
@@ -114,8 +130,11 @@ export const useTextInput = ({
       </p>
     </div>
   ), [
+    adornment,
+    classNames,
     disabled,
     error,
+    id,
     inputLabel,
     inputType,
     minRows,

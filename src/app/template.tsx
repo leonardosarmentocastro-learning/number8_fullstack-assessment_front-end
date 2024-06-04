@@ -11,7 +11,7 @@ export default function RootTemplate ({ children }: { children: React.ReactNode 
   const toggleMenu = () => setShowMenu(prev => !prev);
 
   return (
-    <div className='block lg:flex lg:flex-col'>
+    <div className='h-full w-full'>
       <div className='lg:hidden'>
         <Transition
           show={showMenu}
@@ -36,7 +36,7 @@ export default function RootTemplate ({ children }: { children: React.ReactNode 
 
         <div className='p-8 pb-0 flex flex-row justify-between'>
           <span
-            className="material-symbols-outlined text-[2.4rem] md:text-[4.8rem] cursor-pointer"
+            className="material-symbols-outlined text-[2.4rem] md:text-[4.8rem] cursor-pointer text-[#fff]"
             onClick={toggleMenu}
           >
             menu
@@ -54,7 +54,7 @@ export default function RootTemplate ({ children }: { children: React.ReactNode 
         {children}
       </div>
 
-      <div className='hidden lg:grid lg:grid-cols-[auto,1fr]'>
+      <div className='hidden h-full lg:grid lg:grid-cols-[auto,1fr]'>
         <Menu toggleMenu={toggleMenu} />
 
         {children}
