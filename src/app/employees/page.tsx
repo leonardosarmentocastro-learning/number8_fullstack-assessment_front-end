@@ -1,6 +1,9 @@
 'use client';
 
+import { useCallback, useState } from 'react';
+
 import {
+  API_BASE_URL,
   Employee,
   Employees,
   FETCH_EMPLOYEES_PAGINATION_LIMIT,
@@ -9,22 +12,126 @@ import {
   useFetchEmployees,
 } from '../../data';
 import { EmployeeCard } from '../../components';
+import {
+  DeleteDataDialog,
+} from '../../ui/components';
 
 const EmployeesList = ({ pagination }: {
   pagination: Paginated<Employees>,
-}) => (
-  <div className='mt-8 flex flex-col gap-4 md:grid md:grid-cols-[1fr,1fr] lg:grid-cols-[repeat(auto-fill,minmax(42rem,1fr))]'>
-    {pagination.data?.docs.map((employee: Employee) => (
-      <EmployeeCard.Component employee={employee} />
-    ))}
-  </div>
-);
+}) => {
+  // dialog
+  /////
+  const [ deleteDataDialog, setDeleteDataDialog ] = useState({
+    isOpen: false,
+    deletingDataId: '',
+    data: '',
+  });
+  const openDeleteDataDialog = (employee: Employee) =>
+    () => setDeleteDataDialog({
+      data: `${employee.firstName} ${employee.lastName}`,
+      deletingDataId: employee.id,
+      isOpen: true,
+    });
+  const closeDeleteDataDialog = () => setDeleteDataDialog({
+    isOpen: false,
+    deletingDataId: '',
+    data: '',
+  });
+
+  // deleting employee
+  /////
+  const [ isDeleting, setIsDeleting ] = useState(false);
+  const [ error, setError ] = useState<unknown>(null);
+
+  const deleteEmployee = useCallback(async () => {
+    try {
+      setIsDeleting(true);
+      setError(null);
+
+      const response = await fetch(`${API_BASE_URL}/employees/${deleteDataDialog.deletingDataId}`, {
+        headers: {
+          "Accept-Language": 'pt-br',
+          "Content-Type": "application/json",
+        },
+        method: 'DELETE',
+        mode: 'cors',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw { ...err, status: response.status };
+      };
+
+      setIsDeleting(false);
+      pagination.mutate(); // resets cache and force re-fetch
+    } catch(err: unknown) {
+      setError(err);
+    }
+  }, [
+    closeDeleteDataDialog,
+    deleteDataDialog,
+    pagination,
+    setError,
+    setIsDeleting,
+  ]);
+
+  const confirmDeletion = useCallback(async () => {
+    await deleteEmployee();
+    closeDeleteDataDialog();
+  }, [
+    closeDeleteDataDialog,
+    deleteEmployee,
+  ]);
+
+  return (
+    <section>
+      <DeleteDataDialog
+        confirm={confirmDeletion}
+        close={closeDeleteDataDialog}
+        isOpen={deleteDataDialog.isOpen}
+        data={deleteDataDialog.data}
+        model='employee'
+      />
+
+      <div className='mt-8 flex flex-col gap-4 md:grid md:grid-cols-[1fr,1fr] lg:grid-cols-[repeat(auto-fill,minmax(42rem,1fr))]'>
+        {pagination.data?.docs.map((employee: Employee) => (
+          <EmployeeCard.Component
+            employee={employee}
+            key={employee.id}
+            onRemoveButtonClick={openDeleteDataDialog(employee)}
+            onViewDetailsButtonClick={() => null}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const Loading = () => (
   <div className='mt-8 flex flex-col gap-4 md:grid md:grid-cols-[1fr,1fr] lg:grid-cols-[repeat(auto-fill,minmax(42rem,1fr))]'>
     {[...Array.from(Array(24).keys())].map((v, i) => (
-      <EmployeeCard.Skeleton />
+      <EmployeeCard.Skeleton key={i} />
     ))}
+  </div>
+);
+
+const NoData = () => (
+  <div className='mx-auto mt-12 text-center'>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#fff] font-semibold'>No registries</p>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>There is no data to show.</p>
+  </div>
+);
+
+const NotFound = () => (
+  <div className='mx-auto mt-12 text-center'>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#fff] font-semibold'>Not found</p>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>There is no data that satifies the given search terms.</p>
+  </div>
+);
+
+const Error = () => (
+  <div className='mx-auto mt-12 text-center'>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#fff] font-semibold'>There was an error fetching employees.</p>
+    <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>We will automatically try again in a few moments.</p>
   </div>
 );
 
@@ -32,10 +139,10 @@ const Display = ({ pagination }: {
   pagination: Paginated<Employees>,
 }) => {
   if (pagination.isLoading) return <Loading />;
-  if (!!pagination.error) return 'error'; // TODO
+  if (!!pagination.error) return <Error />;
   if (pagination.hasData) return <EmployeesList pagination={pagination} />
-  if (!pagination.hasData && !pagination.searchTerm) return 'no data'; // TODO
-  if (!pagination.hasData && !!pagination.searchTerm) return 'not found'; // TODO
+  if (!pagination.hasData && !pagination.searchTerm) return <NoData />;
+  if (!pagination.hasData && !!pagination.searchTerm) return <NotFound />;
 
   return <Loading />;
 };
@@ -57,7 +164,9 @@ export default function EmployeesPage() {
 
       {pagination.Component}
 
-      <Display pagination={pagination} />
+      <Display
+        pagination={pagination}
+      />
     </div>
   );
 }

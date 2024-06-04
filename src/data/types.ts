@@ -1,3 +1,5 @@
+import { MutatorCallback } from 'swr';
+
 type GenericObject = { [key:string]: any };
 
 export type PaginationError = {
@@ -26,5 +28,6 @@ export type Paginated<T> = {
   error: string,
   hasData: boolean,
   isLoading: boolean,
+  mutate: MutatorCallback,
   searchTerm: string,
 };

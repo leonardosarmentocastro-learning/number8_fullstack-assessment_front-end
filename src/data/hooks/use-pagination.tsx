@@ -45,10 +45,10 @@ export const usePagination = (
     Component: SearchInput,
     value: searchTerm,
   } = useTextInput({
+    placeholder,
     adornment: 'search',
     id: 'searchInput',
     name: 'searchInput',
-    placeholder,
     options: { strictSize: false },
     label: 'Search for',
   });

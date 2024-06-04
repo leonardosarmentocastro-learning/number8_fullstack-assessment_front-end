@@ -8,9 +8,15 @@ dayjs.extend(relativeTime);
 
 import { Employee } from '.././../../data';
 
-type Props = { employee: Employee };
+type Props = {
+  employee: Employee,
+  onRemoveButtonClick: () => void,
+  onViewDetailsButtonClick: () => void,
+};
 const Component = ({
   employee,
+  onRemoveButtonClick,
+  onViewDetailsButtonClick,
 }: Props) => {
   // NOTE: check hiring dates at `backend/src/modules/employees/__tests__/__fixtures__/employees.fixtures.js`.
   /////
@@ -60,11 +66,17 @@ const Component = ({
       </div>
 
       <div className='flex flex-row lg:flex-col gap-4'>
-        <button className='mt-4 lg:mt-0 py-[1rem] px-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] lg:text-nowrap'>
+        <button
+          className='mt-4 lg:mt-0 py-[1rem] px-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] lg:text-nowrap'
+          onClick={onViewDetailsButtonClick}
+        >
           View details
         </button>
 
-        <button className='mt-4 lg:mt-0 py-[1rem] px-[1rem] bg-[#D24124] text-[#fff] w-full rounded-[1rem] text-[1.6rem] lg:text-nowrap'>
+        <button
+          className='mt-4 lg:mt-0 py-[1rem] px-[1rem] bg-[#D24124] text-[#fff] w-full rounded-[1rem] text-[1.6rem] lg:text-nowrap'
+          onClick={onRemoveButtonClick}
+        >
           Remove
         </button>
       </div>
