@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { SetTextInputError, SetTextInputValue } from '../types';
 
@@ -8,7 +8,7 @@ export type Validate = (args: {
   setError: SetTextInputError,
   value: string,
 }) => void;
-type EventHandler = (args: {
+export type EventHandler = (args: {
   error?: string,
   event?: React.SyntheticEvent | KeyChange,
   setError?: SetTextInputError,
@@ -46,7 +46,7 @@ export const useTextInput = ({
   defaultValue = '',
   defaultError = '',
   disabled = false,
-  id = '',
+  id = useId(),
   label = '',
   minRows = 0,
   multiline = false,

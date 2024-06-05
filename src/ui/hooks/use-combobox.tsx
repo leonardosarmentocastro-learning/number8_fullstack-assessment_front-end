@@ -1,6 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react';
 
+import { SetTextInputError } from '../types';
+
+export type Callback = (args: {
+  setError: SetTextInputError,
+  value: string,
+}) => void;
 type GenericObject = {
   [key: string]: string | any,
   id?: string,
@@ -10,17 +16,22 @@ type GenericObject = {
 type GenericArray = Array<GenericObject>;
 type Props = {
   data: GenericArray | undefined,
+  disabled?: boolean,
   label: string,
+  onOptionChange?: Callback,
   searchKey: string,
 };
 
 export function useCombobox({
   data = [],
+  disabled = false,
   label = '',
+  onOptionChange = () => null,
   searchKey = '',
 }: Props) {
   // states
   /////
+  const [ error, setError ] = useState('');
   const [ query, setQuery ] = useState('');
   const [ selectedValue, setSelectedValue ] = useState(null);
 
@@ -32,8 +43,11 @@ export function useCombobox({
   );
 
   const changeSelection = useCallback(
-    (value: any) => setSelectedValue(value),
-    [ setSelectedValue ]
+    (value: any) => {
+      setSelectedValue(value);
+      onOptionChange({ value, setError });
+    },
+    [ setError, setSelectedValue ]
   );
 
   const cleanQuery = useCallback(
@@ -68,7 +82,8 @@ export function useCombobox({
       return (
         <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
           <label
-            className='text-[1.4rem] md:text-[1.6rem] text-[#fff] font-semibold'
+            aria-disabled={disabled}
+            className={`text-[1.4rem] md:text-[1.6rem] font-semibold aria-disabled:grayscale aria-disabled:opacity-50 ${error ? 'text-[#FF7D7B]' : !!selectedValue ? 'text-[#DAFDCC]' : 'text-[#fff]'}`}
           >
             {label}
           </label>
@@ -77,11 +92,13 @@ export function useCombobox({
             <Combobox
               value={selectedValue}
               onChange={changeSelection}
+              disabled={disabled}
             >
               <div className="relative">
                 <ComboboxInput
                   className={`
                     text-[1.6rem] bg-[#F0EDEB] text-[#000] rounded-[.5rem] pt-[1.5rem] pb-[.5rem] pl-[1rem] pr-[.5rem] w-full
+                    disabled:grayscale disabled:opacity-50
                   `}
                   displayValue={displayValue}
                   onChange={changeQuery}
@@ -114,6 +131,10 @@ export function useCombobox({
                   ))}
                 </ComboboxOptions>
               </Transition>
+
+              <p className={`mt-4 text-[1.4rem] md:text-[1.6rem] text-[#FF7D7B] font-semibold ${!!error ? 'block' : 'hidden'}`}>
+                {error}
+              </p>
             </Combobox>
           </div>
         </div>
@@ -124,7 +145,9 @@ export function useCombobox({
       changeQuery,
       cleanQuery,
       data,
+      disabled,
       displayValue,
+      error,
       filteredList,
       label,
       selectedValue,
@@ -134,6 +157,7 @@ export function useCombobox({
 
   return {
     Component,
+    error,
     selectedValue,
   };
 }
