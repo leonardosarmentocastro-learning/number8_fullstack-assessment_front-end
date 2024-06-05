@@ -15,16 +15,20 @@ type GenericObject = {
 };
 type GenericArray = Array<GenericObject>;
 type Props = {
+  classNames?: string,
   data: GenericArray | undefined,
   disabled?: boolean,
+  isBusy?: boolean,
   label: string,
   onOptionChange?: Callback,
   searchKey: string,
 };
 
 export function useCombobox({
+  classNames = '',
   data = [],
   disabled = false,
+  isBusy = false,
   label = '',
   onOptionChange = () => null,
   searchKey = '',
@@ -80,7 +84,10 @@ export function useCombobox({
   const Component = useMemo(
     () => {
       return (
-        <div className='flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem]'>
+        <div
+          aria-busy={isBusy}
+          className={`flex flex-col w-full md:max-w-[21.5rem] lg:w-[23rem] ${classNames}`}
+        >
           <label
             aria-disabled={disabled}
             className={`text-[1.4rem] md:text-[1.6rem] font-semibold aria-disabled:grayscale aria-disabled:opacity-50 ${error ? 'text-[#FF7D7B]' : !!selectedValue ? 'text-[#DAFDCC]' : 'text-[#fff]'}`}
@@ -143,12 +150,14 @@ export function useCombobox({
     [
       changeSelection,
       changeQuery,
+      classNames,
       cleanQuery,
       data,
       disabled,
       displayValue,
       error,
       filteredList,
+      isBusy,
       label,
       selectedValue,
       searchKey,

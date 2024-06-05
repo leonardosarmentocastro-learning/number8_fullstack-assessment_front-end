@@ -22,6 +22,7 @@ type Props = {
   defaultValue?: string,
   disabled?: boolean,
   id?: string,
+  isBusy?: boolean,
   onBlur?: EventHandler,
   onChange?: (ev: React.SyntheticEvent) => void,
   onFocus?: (ev: React.FocusEvent<HTMLInputElement>) => void,
@@ -47,6 +48,7 @@ export const useTextInput = ({
   defaultError = '',
   disabled = false,
   id = useId(),
+  isBusy = false,
   label = '',
   minRows = 0,
   multiline = false,
@@ -96,7 +98,10 @@ export const useTextInput = ({
   );
 
   const Component = useMemo(() => (
-    <div className={`flex flex-col w-full ${options.strictSize ? 'md:max-w-[21.5rem] lg:w-[23rem]' : ''} ${classNames}`.trim()}>
+    <div
+      aria-busy={isBusy}
+      className={`flex flex-col w-full ${options.strictSize ? 'md:max-w-[21.5rem] lg:w-[23rem]' : ''} ${classNames}`.trim()}
+    >
       <label
         className={`text-[1.4rem] md:text-[1.6rem] font-semibold ${error ? 'text-[#FF7D7B]' : !!value ? 'text-[#DAFDCC]' : 'text-[#fff]'}`}
         htmlFor={id}
@@ -137,6 +142,7 @@ export const useTextInput = ({
     id,
     inputLabel,
     inputType,
+    isBusy,
     minRows,
     multiline,
     __onBlur__,

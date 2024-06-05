@@ -9,16 +9,18 @@ import {
   PostalCodeLocale,
 } from 'validator';
 // import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
 
 import {
   Callback,
   EventHandler,
+  LoadingSpinner,
   useCombobox,
   useTextInput,
   Validate,
-} from '../../../ui';
-import { useFetchDepartments } from '../../../data';
+} from '@/ui';
+import { API_BASE_URL, useFetchDepartments } from '@/data';
 import { capitalize } from '@/utils';
 
 // TODO: move to own file
@@ -74,7 +76,11 @@ const EMPLOYEE_STATUSES = [{
   id: '1',
   name: 'Inactive',
   value: false,
-}]
+}];
+
+const ELEMENTS_BUSY_CLASSNAMES = 'aria-busy:opacity-0';
+const FORM_BUSY_CLASSNAMES = 'relative aria-busy:border-0 after:aria-busy:absolute after:aria-busy:content-[""] after:aria-busy:w-full after:aria-busy:h-full after:aria-busy:bg-gray-600 after:aria-busy:animate-pulse after:aria-busy:top-0 after:aria-busy:left-0 after:aria-busy:rounded-[1rem]';
+const PICTURE_BUSY_CLASSNAMES = 'after:aria-busy:absolute after:aria-busy:content-[""] after:aria-busy:w-[14rem] after:aria-busy:h-[14rem] after:aria-busy:bg-gray-600 after:aria-busy:animate-pulse after:aria-busy:rounded-[.5rem]';
 
 // TODO: move to own file
 const validateEmptyness: Validate = ({ setError, value }) => {
@@ -192,6 +198,7 @@ const capitalizeWords: EventHandler = ({ error, value, setValue }) => {
   !!setValue && setValue(capitalized);
 };
 
+// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default function NewEmployeePage() {
   // TODO: encapsulate into it's own component, so can be used in both '/employees/new' or '/employees/update/:id`
   // TODO:
@@ -202,6 +209,8 @@ export default function NewEmployeePage() {
   // states
   /////
   const [ defaultProfilePicture, setDefaultProfilePicture ] = useState('');
+  const [ isSaving, setIsSaving ] = useState(false);
+  const [ error, setError ] = useState<unknown>(null);
 
   // fetching
   /////
@@ -218,6 +227,8 @@ export default function NewEmployeePage() {
     error: firstNameError,
     value: firstName,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'First name',
     onBlur: capitalizeWords,
     validate: validateFirstName,
@@ -228,6 +239,8 @@ export default function NewEmployeePage() {
     error: lastNameError,
     value: lastName,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'Last name',
     onBlur: capitalizeWords,
     validate: validateLastName
@@ -238,6 +251,8 @@ export default function NewEmployeePage() {
     error: phoneError,
     value: phone,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'Phone number',
     defaultError: '',
     defaultValue: '',
@@ -267,6 +282,8 @@ export default function NewEmployeePage() {
     error: stateError,
     value: state,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'State',
     onBlur: capitalizeWords,
     validate: validateEmptyness
@@ -277,6 +294,8 @@ export default function NewEmployeePage() {
     error: cityError,
     value: city,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'City',
     onBlur: capitalizeWords,
     validate: validateEmptyness
@@ -287,6 +306,8 @@ export default function NewEmployeePage() {
     error: streetAddressError,
     value: streetAddress,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'Street address',
     onBlur: capitalizeWords,
     validate: validateEmptyness
@@ -297,6 +318,8 @@ export default function NewEmployeePage() {
     error: streetNumberError,
     value: streetNumber,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'Street number',
     validate: validateNumber
   });
@@ -306,6 +329,8 @@ export default function NewEmployeePage() {
     error: zipCodeError,
     value: zipCode,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'ZIP code',
     placeholder: 'Special characters accepted',
     validate: validateZipcode
@@ -349,8 +374,10 @@ export default function NewEmployeePage() {
     error: selectedDepartmentError,
     selectedValue: selectedDepartment,
   } = useCombobox({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
     data: departments?.docs,
     disabled: isFetchingDepartments,
+    isBusy: isSaving,
     label: 'Departments',
     onOptionChange: validateOptionChange,
     searchKey: 'name',
@@ -361,6 +388,8 @@ export default function NewEmployeePage() {
     error: hiringDateError,
     value: hiringDate,
   } = useTextInput({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
+    isBusy: isSaving,
     label: 'Hiring date',
     placeholder: 'MM/DD/YYYY',
     validate: validateHiringDate
@@ -371,7 +400,9 @@ export default function NewEmployeePage() {
     error: selectedStatusError,
     selectedValue: selectedStatus,
   } = useCombobox({
+    classNames: ELEMENTS_BUSY_CLASSNAMES,
     data: EMPLOYEE_STATUSES,
+    isBusy: isSaving,
     label: 'Status',
     onOptionChange: validateOptionChange,
     searchKey: 'name',
@@ -411,6 +442,69 @@ export default function NewEmployeePage() {
     [ addressForm, hiringInformationForm, personalInformationForm ]
   );
 
+  const isButtonDisabled = useMemo(
+    () => isSaving || !isDone,
+    [ isDone, isSaving ]
+  );
+
+  // callbacks
+  /////
+  const save = useCallback(async () => {
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      // await sleep(2000);
+      const response = await fetch(`${API_BASE_URL}/employees`, {
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone,
+          active: true,
+          address: {
+            city,
+            state,
+            streetAddress,
+            streetNumber,
+            zipCode,
+            locale: 'en-US',
+          },
+          department: selectedDepartment,
+          hireDate: dayjs(hiringDate).startOf('day').valueOf(),
+          pictureURL: defaultProfilePicture,
+        }),
+        headers: {
+          "Accept-Language": 'pt-br',
+          "Content-Type": "application/json",
+        },
+        method: 'POST',
+        mode: 'cors',
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw { ...err, status: response.status };
+      };
+
+      setIsSaving(false);
+    } catch(err: unknown) {
+      setError(err);
+    }
+  }, [
+    city,
+    defaultProfilePicture,
+    firstName,
+    hiringDate,
+    lastName,
+    phone,
+    selectedDepartment,
+    setError,
+    setIsSaving,
+    state,
+    streetAddress,
+    streetNumber,
+    zipCode,
+  ]);
+
   // effects
   /////
   // Randomly selects a default profile picture.
@@ -421,21 +515,50 @@ export default function NewEmployeePage() {
     setDefaultProfilePicture(randomPicture);
   }, []);
 
+  // bg-gray-400 bg-gray-600 animate-pulse
+  // after:content-["*"] after:w-full after:h-full after:bg-gray-600 after:animate-pulse
+
+
   return (
-    <div className='p-8'>
+    <div aria-busy={isSaving} className='p-8 aria-busy:cursor-progress aria-busy:pointer-events-none'>
       <div className='mt-12 lg:mt-8'>
         <h1 className='text-[2.4rem] md:text-[4rem] text-[#fff] font-semibold'>New employee</h1>
         <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>Provide information regarding the newcomer:</p>
       </div>
 
+      {/* TODO: save and show  */}
+      {/* <div className='mt-[30%] flex flex-col text-center space-y-4 items-center justify-center'>
+        <div className='mb-8'>
+          <p className='text-[2.4rem] md:text-[3.2rem] text-[#fff] font-semibold'>Employee saved successfully!</p>
+          <p className='text-[2rem] md:text-[2.4rem] text-[#98A1A8] font-regular'>What now?</p>
+        </div>
+
+        <button
+          className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+        >
+          View all employees
+        </button>
+
+        <button
+          className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+        >
+          Create new employee
+        </button>
+      </div> */}
+
+      {/* TODO: hide on save */}
       <div className='flex flex-col items-center'>
         <div className="mt-12 flex flex-col justify-center items-center">
-          <div className='relative w-[14rem] h-[14rem]'>
+          <div
+            aria-busy={isSaving}
+            className={`relative w-[14rem] h-[14rem] ${PICTURE_BUSY_CLASSNAMES}`}
+          >
             {defaultProfilePicture && (
               <Image
+                aria-busy={isSaving}
                 src={defaultProfilePicture}
                 alt='Employee avatar'
-                className={`z-0 w-full h-full object-cover rounded-[.5rem] ${false ? 'grayscale' : ''}`}
+                className={`z-0 w-full h-full object-cover rounded-[.5rem] ${false ? 'grayscale' : ''} aria-busy:opacity-0`} // TODO
                 fill
               />
             )}
@@ -454,8 +577,11 @@ export default function NewEmployeePage() {
           <p className='text-[1rem] text-[#98A1A8] font-regular'>You must hire "Leonardo Sarmento de Castro" for having it done.</p>
         </div>
 
-        <div className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${personalInformationForm.borderClassnames}`}>
-          <h1 className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${personalInformationForm.textClassnames}`}>Personal information</h1>
+        <div
+          aria-busy={isSaving}
+          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${personalInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
+        >
+          <h1 aria-busy={isSaving} className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${personalInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}>Personal information</h1>
 
           <div className='flex flex-col md:flex-row gap-8'>
             {FirstNameInput}
@@ -464,8 +590,16 @@ export default function NewEmployeePage() {
           </div>
         </div>
 
-        <div className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${addressForm.borderClassnames}`}>
-          <h1 className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${addressForm.textClassnames}`}>Address</h1>
+        <div
+          aria-busy={isSaving}
+          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${addressForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
+        >
+          <h1
+            aria-busy={isSaving}
+            className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${addressForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
+          >
+            Address
+          </h1>
 
           <div className='flex flex-col md:flex-row gap-8'>
             {StateInput}
@@ -479,8 +613,16 @@ export default function NewEmployeePage() {
           </div>
         </div>
 
-        <div className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${hiringInformationForm.borderClassnames}`}>
-          <h1 className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${hiringInformationForm.textClassnames}`}>Hiring information</h1>
+        <div
+          aria-busy={isSaving}
+          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${hiringInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
+        >
+          <h1
+            aria-busy={isSaving}
+            className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${hiringInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
+          >
+            Hiring information
+          </h1>
 
           <div className='flex flex-col md:flex-row gap-8'>
             {DepartmentsCombobox}
@@ -523,10 +665,11 @@ export default function NewEmployeePage() {
         </div>
 
         <button
-          className='mt-12 md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
-          disabled={!isDone}
+          className='mt-12 flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+          disabled={isButtonDisabled}
+          onClick={save}
         >
-          Save
+          {isSaving ? <LoadingSpinner /> : 'Save'}
         </button>
       </div>
     </div>

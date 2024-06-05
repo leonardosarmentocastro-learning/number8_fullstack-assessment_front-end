@@ -10,11 +10,11 @@ import {
   Paginated,
   usePagination,
   useFetchEmployees,
-} from '../../data';
-import { EmployeeCard } from '../../components';
+} from '@/data';
+import { EmployeeCard } from '@/components';
 import {
   DeleteDataDialog,
-} from '../../ui/components';
+} from '@/ui/components';
 
 const EmployeesList = ({ pagination }: {
   pagination: Paginated<Employees>,
