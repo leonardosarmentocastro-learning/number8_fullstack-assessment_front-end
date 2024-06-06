@@ -7,13 +7,13 @@ export type Callback = (args: {
   setError: SetTextInputError,
   value: string,
 }) => void;
-type GenericObject = {
+export type ComboboxOption = {
   [key: string]: string | any,
   id?: string,
   name?: string,
   value?: any,
 };
-type GenericArray = Array<GenericObject>;
+type GenericArray = Array<ComboboxOption>;
 type Props = {
   classNames?: string,
   data: GenericArray | undefined,
@@ -37,7 +37,7 @@ export function useCombobox({
   /////
   const [ error, setError ] = useState('');
   const [ query, setQuery ] = useState('');
-  const [ selectedValue, setSelectedValue ] = useState(null);
+  const [ selectedValue, setSelectedValue ] = useState<ComboboxOption | null>(null);
 
   // callbacks
   /////
@@ -73,7 +73,7 @@ export function useCombobox({
   );
 
   const displayValue = useCallback(
-    (d: GenericObject) => {
+    (d: ComboboxOption) => {
       return !!d ? d[searchKey] : '';
     },
     [ searchKey ]
@@ -126,7 +126,7 @@ export function useCombobox({
                   anchor="bottom"
                   className="w-[var(--input-width)] rounded-xl border border-white/5 bg-[#F0EDEB] p-1 [--anchor-gap:var(--spacing-1)] empty:hidden"
                 >
-                  {filteredList?.map((data: GenericObject) => (
+                  {filteredList?.map((data: ComboboxOption) => (
                     <ComboboxOption
                       key={data.id}
                       value={data}
@@ -168,5 +168,6 @@ export function useCombobox({
     Component,
     error,
     selectedValue,
+    setSelectedValue,
   };
 }

@@ -8,12 +8,13 @@ import {
   MobilePhoneLocale,
   PostalCodeLocale,
 } from 'validator';
-// import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 
 import {
   Callback,
+  ComboboxOption,
   EventHandler,
   LoadingSpinner,
   useCombobox,
@@ -21,7 +22,7 @@ import {
   Validate,
 } from '@/ui';
 import { API_BASE_URL, useFetchDepartments } from '@/data';
-import { capitalize } from '@/utils';
+import { capitalize, isEmpty } from '@/utils';
 
 // TODO: move to own file
 const ERROR_CANT_BE_EMPTY = "Can't be empty";
@@ -68,15 +69,17 @@ const EMPLOYEE_DEFAULT_PROFILE_PICTURES = [
   EMPLOYEE_DEFAULT_PROFILE_PICTURE_7,
 ];
 
-const EMPLOYEE_STATUSES = [{
+const EMPLOYEE_STATUS_OPTION_ACTIVE = {
   id: '0',
   name: 'Active',
   value: true,
-}, {
+};
+const EMPLOYEE_STATUS_OPTION_INACTIVE = {
   id: '1',
   name: 'Inactive',
   value: false,
-}];
+};
+const EMPLOYEE_STATUSES: ComboboxOption[] = [ EMPLOYEE_STATUS_OPTION_ACTIVE, EMPLOYEE_STATUS_OPTION_INACTIVE ];
 
 const ELEMENTS_BUSY_CLASSNAMES = 'aria-busy:opacity-0';
 const FORM_BUSY_CLASSNAMES = 'relative aria-busy:border-0 after:aria-busy:absolute after:aria-busy:content-[""] after:aria-busy:w-full after:aria-busy:h-full after:aria-busy:bg-gray-600 after:aria-busy:animate-pulse after:aria-busy:top-0 after:aria-busy:left-0 after:aria-busy:rounded-[1rem]';
@@ -161,7 +164,7 @@ const validateZipcode: Callback = ({ setError, value }) => {
 };
 
 type Evaluate = ({ fields, errorFields }: {
-  fields: Array<string | null>,
+  fields: Array<string | ComboboxOption | null>,
   errorFields: Array<string>,
 }) => {
   borderClassnames: string,
@@ -198,7 +201,57 @@ const capitalizeWords: EventHandler = ({ error, value, setValue }) => {
   !!setValue && setValue(capitalized);
 };
 
-// const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const Done = ({ reset }: { reset: () => void }) => {
+  const router = useRouter();
+
+  const goToViewEmployees = async () => {
+    router.push('/employees');
+  };
+
+  return (
+    <div className='mt-[30%] flex flex-col text-center space-y-4 items-center justify-center'>
+      <div className='mb-8'>
+        <p className='text-[2.4rem] md:text-[3.2rem] text-[#fff] font-semibold'>Employee saved successfully!</p>
+        <p className='text-[2rem] md:text-[2.4rem] text-[#98A1A8] font-regular'>What now?</p>
+      </div>
+
+      <button
+        className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+        onClick={goToViewEmployees}
+      >
+        View all employees
+      </button>
+
+      <button
+        className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+        onClick={reset}
+      >
+        Create new employee
+      </button>
+    </div>
+  )
+};
+
+const Error = ({ error }: { error: JSON }) => (
+  <div className='mt-[30%] flex flex-col text-center space-y-4 items-center justify-center'>
+    <p className='text-[2.4rem] md:text-[3.2rem] text-[#fff] font-semibold'>Sorry, we had a problem saving an employee.</p>
+    <p className='text-[2rem] md:text-[2.4rem] text-[#98A1A8] font-regular'>More information below:</p>
+
+    <pre className='p-12'>
+      <code className='text-[1.6rem] md:text-[2rem] text-[#98A1A8] font-regular'>
+        {JSON.stringify(error)}
+      </code>
+    </pre>
+
+    <button
+      className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+    >
+      Go back and try again
+    </button>
+  </div>
+);
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export default function NewEmployeePage() {
   // TODO: encapsulate into it's own component, so can be used in both '/employees/new' or '/employees/update/:id`
   // TODO:
@@ -208,9 +261,10 @@ export default function NewEmployeePage() {
 
   // states
   /////
-  const [ defaultProfilePicture, setDefaultProfilePicture ] = useState('');
-  const [ isSaving, setIsSaving ] = useState(false);
-  const [ error, setError ] = useState<unknown>(null);
+  const [ defaultProfilePicture, setDefaultProfilePicture ] = useState<string>('');
+  const [ isSaving, setIsSaving ] = useState<boolean>(false);
+  const [ error, setError ] = useState<unknown | JSON>({});
+  const [ saved, setIsSaved ] = useState(false);
 
   // fetching
   /////
@@ -226,6 +280,7 @@ export default function NewEmployeePage() {
     Component: FirstNameInput,
     error: firstNameError,
     value: firstName,
+    setValue: setFirstName,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -238,6 +293,7 @@ export default function NewEmployeePage() {
     Component: LastNameInput,
     error: lastNameError,
     value: lastName,
+    setValue: setLastName,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -250,6 +306,7 @@ export default function NewEmployeePage() {
     Component: PhoneInput,
     error: phoneError,
     value: phone,
+    setValue: setPhone,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -281,6 +338,7 @@ export default function NewEmployeePage() {
     Component: StateInput,
     error: stateError,
     value: state,
+    setValue: setState,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -293,6 +351,7 @@ export default function NewEmployeePage() {
     Component: CityInput,
     error: cityError,
     value: city,
+    setValue: setCity,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -305,6 +364,7 @@ export default function NewEmployeePage() {
     Component: StreetAddressInput,
     error: streetAddressError,
     value: streetAddress,
+    setValue: setStreetAddress,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -317,6 +377,7 @@ export default function NewEmployeePage() {
     Component: StreetNumberInput,
     error: streetNumberError,
     value: streetNumber,
+    setValue: setStreetNumber,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -328,6 +389,7 @@ export default function NewEmployeePage() {
     Component: ZipCodeInput,
     error: zipCodeError,
     value: zipCode,
+    setValue: setZipCode,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -373,6 +435,7 @@ export default function NewEmployeePage() {
     Component: DepartmentsCombobox,
     error: selectedDepartmentError,
     selectedValue: selectedDepartment,
+    setSelectedValue: setSelectedDepartment,
   } = useCombobox({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     data: departments?.docs,
@@ -387,6 +450,7 @@ export default function NewEmployeePage() {
     Component: HiringDateInput,
     error: hiringDateError,
     value: hiringDate,
+    setValue: setHiringDate,
   } = useTextInput({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     isBusy: isSaving,
@@ -399,6 +463,7 @@ export default function NewEmployeePage() {
     Component: StatusCombobox,
     error: selectedStatusError,
     selectedValue: selectedStatus,
+    setSelectedValue: setSelectedStatus,
   } = useCombobox({
     classNames: ELEMENTS_BUSY_CLASSNAMES,
     data: EMPLOYEE_STATUSES,
@@ -447,20 +512,59 @@ export default function NewEmployeePage() {
     [ isDone, isSaving ]
   );
 
+  const isInactive = useMemo(
+    () => (selectedStatus?.name === EMPLOYEE_STATUS_OPTION_INACTIVE.name),
+    [ selectedStatus ]
+  );
+
   // callbacks
   /////
+  const reset = useCallback(() => {
+    setFirstName('');
+    setLastName('');
+    setPhone('');
+    setState('');
+    setCity('');
+    setStreetAddress('');
+    setStreetNumber('');
+    setZipCode('');
+    setSelectedDepartment(null);
+    setHiringDate('');
+    setSelectedStatus(null);
+
+    setIsSaved(false);
+    setIsSaving(false);
+    setError({});
+  }, [
+    setFirstName,
+    setLastName,
+    setPhone,
+    setState,
+    setCity,
+    setStreetAddress,
+    setStreetNumber,
+    setZipCode,
+    setSelectedDepartment,
+    setHiringDate,
+    setSelectedStatus,
+    setIsSaved,
+    setIsSaving,
+    setError,
+  ]);
+
   const save = useCallback(async () => {
     try {
+      setIsSaved(false);
       setIsSaving(true);
       setError(null);
 
-      // await sleep(2000);
+      await sleep(2000);
       const response = await fetch(`${API_BASE_URL}/employees`, {
         body: JSON.stringify({
           firstName,
           lastName,
           phone,
-          active: true,
+          active: selectedStatus?.value,
           address: {
             city,
             state,
@@ -486,7 +590,8 @@ export default function NewEmployeePage() {
       };
 
       setIsSaving(false);
-    } catch(err: unknown) {
+      setIsSaved(true);
+    } catch(err: any) {
       setError(err);
     }
   }, [
@@ -497,7 +602,9 @@ export default function NewEmployeePage() {
     lastName,
     phone,
     selectedDepartment,
+    selectedStatus,
     setError,
+    setIsSaved,
     setIsSaving,
     state,
     streetAddress,
@@ -515,10 +622,6 @@ export default function NewEmployeePage() {
     setDefaultProfilePicture(randomPicture);
   }, []);
 
-  // bg-gray-400 bg-gray-600 animate-pulse
-  // after:content-["*"] after:w-full after:h-full after:bg-gray-600 after:animate-pulse
-
-
   return (
     <div aria-busy={isSaving} className='p-8 aria-busy:cursor-progress aria-busy:pointer-events-none'>
       <div className='mt-12 lg:mt-8'>
@@ -526,152 +629,139 @@ export default function NewEmployeePage() {
         <p className='text-[1.4rem] md:text-[2rem] text-[#98A1A8] font-regular'>Provide information regarding the newcomer:</p>
       </div>
 
-      {/* TODO: save and show  */}
-      {/* <div className='mt-[30%] flex flex-col text-center space-y-4 items-center justify-center'>
-        <div className='mb-8'>
-          <p className='text-[2.4rem] md:text-[3.2rem] text-[#fff] font-semibold'>Employee saved successfully!</p>
-          <p className='text-[2rem] md:text-[2.4rem] text-[#98A1A8] font-regular'>What now?</p>
-        </div>
+      {!isEmpty(error) ? (
+        <Error error={(error as JSON)} />
+      ) : saved ? (
+        <Done reset={reset} />
+      ) : (
+        <div className='flex flex-col items-center'>
+          <div className="mt-12 flex flex-col justify-center items-center">
+            <div
+              aria-busy={isSaving}
+              className={`relative w-[14rem] h-[14rem] ${PICTURE_BUSY_CLASSNAMES}`}
+            >
+              {defaultProfilePicture && (
+                <Image
+                  aria-busy={isSaving}
+                  src={defaultProfilePicture}
+                  alt='Employee avatar'
+                  className={`z-0 w-full h-full object-cover rounded-[.5rem] aria-busy:opacity-0 ${isInactive ? 'grayscale' : ''}`}
+                  fill
+                />
+              )}
 
-        <button
-          className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
-        >
-          View all employees
-        </button>
+              <p className={`absolute z-10 inset-x-12 bottom-2 w-[8rem] py-1 text-center bg-[#D24124] rounded-[1rem] shadow-md ${isInactive && !isSaving ? 'inline-block' : 'hidden'}`}>
+                Inactive
+              </p>
+            </div>
 
-        <button
-          className='flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#fff] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
-        >
-          Create new employee
-        </button>
-      </div> */}
+            <button
+              className='mt-4 max-w-[14rem] py-[1rem] bg-[#98A1A8] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem]'
+              disabled
+            >
+              Upload photo
+            </button>
 
-      {/* TODO: hide on save */}
-      <div className='flex flex-col items-center'>
-        <div className="mt-12 flex flex-col justify-center items-center">
+            <p className='mt-4 text-[1rem] text-[#98A1A8] font-regular'>This is a premium feature.</p>
+            <p className='text-[1rem] text-[#98A1A8] font-regular'>You must hire "Leonardo Sarmento de Castro" for having it done.</p>
+          </div>
+
           <div
             aria-busy={isSaving}
-            className={`relative w-[14rem] h-[14rem] ${PICTURE_BUSY_CLASSNAMES}`}
+            className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${personalInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
           >
-            {defaultProfilePicture && (
-              <Image
-                aria-busy={isSaving}
-                src={defaultProfilePicture}
-                alt='Employee avatar'
-                className={`z-0 w-full h-full object-cover rounded-[.5rem] ${false ? 'grayscale' : ''} aria-busy:opacity-0`} // TODO
-                fill
-              />
-            )}
+            <h1 aria-busy={isSaving} className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${personalInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}>Personal information</h1>
 
-            <p className={`absolute z-10 inset-x-4 bottom-2 w-[8rem] py-1 text-center bg-[#D24124] rounded-[1rem] shadow-md ${false ? 'inline-block' : 'hidden'}`}>Inactive</p>
+            <div className='flex flex-col md:flex-row gap-8'>
+              {FirstNameInput}
+              {LastNameInput}
+              {PhoneInput}
+            </div>
+          </div>
+
+          <div
+            aria-busy={isSaving}
+            className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${addressForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
+          >
+            <h1
+              aria-busy={isSaving}
+              className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${addressForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
+            >
+              Address
+            </h1>
+
+            <div className='flex flex-col md:flex-row gap-8'>
+              {StateInput}
+              {CityInput}
+            </div>
+
+            <div className='flex flex-col md:flex-row gap-8'>
+              {StreetAddressInput}
+              {StreetNumberInput}
+              {ZipCodeInput}
+            </div>
+          </div>
+
+          <div
+            aria-busy={isSaving}
+            className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${hiringInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
+          >
+            <h1
+              aria-busy={isSaving}
+              className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${hiringInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
+            >
+              Hiring information
+            </h1>
+
+            <div className='flex flex-col md:flex-row gap-8'>
+              {DepartmentsCombobox}
+              {HiringDateInput}
+              {StatusCombobox}
+            </div>
+
+            {/* TODO */}
+            {isUpdating && (
+              <div className='flex flex-col'>
+                <h1 className='text-[1.6rem] md:text-[2.4rem] text-[#98A1A8] font-semibold'>Department History</h1>
+
+                <table className='text-[#fff] text-left text-[1.2rem] md:text-[1.4rem] font-semibold'>
+                  <thead>
+                    <tr className='border-b border-[#D9D9D9] md:text-[1.6rem]'>
+                      <th className='px-4 py-3'>Date</th>
+                      <th className='px-4 py-3'>Department</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <tr className='border-t border-[rgba(217,217,217,.35)] bg-[rgba(217,217,217,.2)]'>
+                      <td className='px-4 py-3'>30/05/2024 23:00:00</td>
+                      <td className='px-4 py-3'>Technology</td>
+                    </tr>
+
+                    <tr className='border-t border-[rgba(217,217,217,.35)]'>
+                      <td className='px-4 py-3'>30/05/2024 22:00:00</td>
+                      <td className='px-4 py-3'>Human resources</td>
+                    </tr>
+
+                    <tr className='border-t border-[rgba(217,217,217,.35)]'>
+                      <td className='px-4 py-3'>30/05/2024 21:00:00</td>
+                      <td className='px-4 py-3'>Finances</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <button
-            className='mt-4 max-w-[14rem] py-[1rem] bg-[#98A1A8] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem]'
-            disabled
+            className='mt-12 flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
+            disabled={isButtonDisabled}
+            onClick={save}
           >
-            Upload photo
+            {isSaving ? <LoadingSpinner /> : 'Save'}
           </button>
-
-          <p className='mt-4 text-[1rem] text-[#98A1A8] font-regular'>This is a premium feature.</p>
-          <p className='text-[1rem] text-[#98A1A8] font-regular'>You must hire "Leonardo Sarmento de Castro" for having it done.</p>
         </div>
-
-        <div
-          aria-busy={isSaving}
-          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${personalInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
-        >
-          <h1 aria-busy={isSaving} className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${personalInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}>Personal information</h1>
-
-          <div className='flex flex-col md:flex-row gap-8'>
-            {FirstNameInput}
-            {LastNameInput}
-            {PhoneInput}
-          </div>
-        </div>
-
-        <div
-          aria-busy={isSaving}
-          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${addressForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
-        >
-          <h1
-            aria-busy={isSaving}
-            className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${addressForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
-          >
-            Address
-          </h1>
-
-          <div className='flex flex-col md:flex-row gap-8'>
-            {StateInput}
-            {CityInput}
-          </div>
-
-          <div className='flex flex-col md:flex-row gap-8'>
-            {StreetAddressInput}
-            {StreetNumberInput}
-            {ZipCodeInput}
-          </div>
-        </div>
-
-        <div
-          aria-busy={isSaving}
-          className={`mt-8 p-8 flex flex-col gap-8 w-full lg:w-fit bg-[#2D3039] rounded-[1rem] border ${hiringInformationForm.borderClassnames} ${FORM_BUSY_CLASSNAMES}`}
-        >
-          <h1
-            aria-busy={isSaving}
-            className={`text-[1.6rem] md:text-[2.4rem] font-semibold ${hiringInformationForm.textClassnames} ${ELEMENTS_BUSY_CLASSNAMES}`}
-          >
-            Hiring information
-          </h1>
-
-          <div className='flex flex-col md:flex-row gap-8'>
-            {DepartmentsCombobox}
-            {HiringDateInput}
-            {StatusCombobox}
-          </div>
-
-          {/* TODO */}
-          {isUpdating && (
-            <div className='flex flex-col'>
-              <h1 className='text-[1.6rem] md:text-[2.4rem] text-[#98A1A8] font-semibold'>Department History</h1>
-
-              <table className='text-[#fff] text-left text-[1.2rem] md:text-[1.4rem] font-semibold'>
-                <thead>
-                  <tr className='border-b border-[#D9D9D9] md:text-[1.6rem]'>
-                    <th className='px-4 py-3'>Date</th>
-                    <th className='px-4 py-3'>Department</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr className='border-t border-[rgba(217,217,217,.35)] bg-[rgba(217,217,217,.2)]'>
-                    <td className='px-4 py-3'>30/05/2024 23:00:00</td>
-                    <td className='px-4 py-3'>Technology</td>
-                  </tr>
-
-                  <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                    <td className='px-4 py-3'>30/05/2024 22:00:00</td>
-                    <td className='px-4 py-3'>Human resources</td>
-                  </tr>
-
-                  <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                    <td className='px-4 py-3'>30/05/2024 21:00:00</td>
-                    <td className='px-4 py-3'>Finances</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <button
-          className='mt-12 flex items-center justify-center md:max-w-[28rem] py-[1rem] bg-[#DAFDCC] text-[#2D3039] w-full rounded-[1rem] text-[1.6rem] disabled:grayscale disabled:opacity-50'
-          disabled={isButtonDisabled}
-          onClick={save}
-        >
-          {isSaving ? <LoadingSpinner /> : 'Save'}
-        </button>
-      </div>
+      )}
     </div>
   );
 }
