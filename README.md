@@ -8,7 +8,7 @@
 <div style='display:flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px;'>
   <div align="center">
     <a href="https://bit.ly/leonardosarmentocastro-linkedin" target="_blank">
-      <img style='border-radius: 100%; max-width: 140px;' src="https://media.licdn.com/dms/image/D4D03AQGrpVCKZnAing/profile-displayphoto-shrink_800_800/0/1699902703285?e=1723075200&v=beta&t=-vnDzjzXGpY38ocIOMiZteJgxb5xtRQXZwJiqaBDErk" alt="leonardo profile picture" />
+      <img style='border-radius: 100%; max-width: 140px; width:140px; height:140px;' width='140' height='140' src="https://media.licdn.com/dms/image/D4D03AQGrpVCKZnAing/profile-displayphoto-shrink_800_800/0/1699902703285?e=1723075200&v=beta&t=-vnDzjzXGpY38ocIOMiZteJgxb5xtRQXZwJiqaBDErk" alt="leonardo profile picture" />
     </a>
   </div>
 
