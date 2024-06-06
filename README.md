@@ -14,7 +14,7 @@
 
   <div>
     <h3 align="center">
-      <a href='https://github.com/user-attachments/files/15685459/Fullstack.Assessment.Candidate.Instructions.pdf' target='_blank'>Full-stack assessment</a>
+      <a href='https://drive.google.com/file/d/1i71LQInhufuUUQ6emSNbl6hDclTeUN-0/view?usp=sharing' target='_blank'>Full-stack assessment</a>
     </h3>
     <p align="center">by Leonardo Sarmento de Castro</p>
   </div>
@@ -37,9 +37,9 @@
 
 <h3 align="center">Figma prototype</h3>
 
-![number8-full-stack-assessment](https://private-user-images.githubusercontent.com/11094572/337414609-2bbc1a6b-ed73-4d3d-ba4c-0c4ef78d8425.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTc3MDMyODIsIm5iZiI6MTcxNzcwMjk4MiwicGF0aCI6Ii8xMTA5NDU3Mi8zMzc0MTQ2MDktMmJiYzFhNmItZWQ3My00ZDNkLWJhNGMtMGM0ZWY3OGQ4NDI1LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDA2MDYlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwNjA2VDE5NDMwMlomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTBiZWY0OWU1ZTgzNzUyNzBjMmMyMjA1NDI0OTYzOGMwMWE4MzZlZThiNDA2YzU4Y2ZjY2JiMzg1NmFhZWQ0NmYmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.zbYOBk1K1GebLRD-T_nhy89fptKVer3n97jM7fxytx4)
+![number8-full-stack-assessment](https://lh3.googleusercontent.com/u/0/drive-viewer/AKGpihZTJyzDuP_6tvckcug-frXKrYM-zoam3D1chg1Py5NE5KskkKLZVXsrf2DJ_KpOixoDm_1WIvxWtY6CAFiuSl9qROJo3OCAqw=w1280-h934-rw-v1)
 
-> [number8-full-stack-assessment-prototype.pdf](https://github.com/user-attachments/files/15685425/number8-full-stack-assessment.pdf)
+> [number8-full-stack-assessment-prototype.pdf](https://drive.google.com/file/d/1_7bB5QflgGf51EwgFOEcjsG5oh-NWEaG/view?usp=sharing)
 
 ---
 
