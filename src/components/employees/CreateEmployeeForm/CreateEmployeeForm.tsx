@@ -48,7 +48,7 @@ export function CreateEmployeeForm() {
   /////
   const [ defaultProfilePicture, setDefaultProfilePicture ] = useState<string>('');
   const [ isSaving, setIsSaving ] = useState<boolean>(false);
-  const [ error, setError ] = useState<unknown | JSON>({});
+  const [ savingError, setSavingError ] = useState<unknown | JSON>({});
   const [ saved, setIsSaved ] = useState(false);
 
   // fetching
@@ -384,6 +384,17 @@ export function CreateEmployeeForm() {
     selectedDepartment,
   ]);
 
+  const occurredErrors = useMemo(
+    () => {
+      if (!isEmpty(employeeError)) return employeeError;
+      if (!isEmpty(savingError)) return savingError;
+      if (!isEmpty(departmentsError)) return departmentsError;
+
+      return null;
+    },
+    [ savingError, departmentsError, employeeError ]
+  );
+
   // callbacks
   /////
   const reset = useCallback(() => {
@@ -405,7 +416,7 @@ export function CreateEmployeeForm() {
 
     setIsSaved(false);
     setIsSaving(false);
-    setError({});
+    setSavingError({});
   }, [
     isUpdating,
     router,
@@ -422,14 +433,14 @@ export function CreateEmployeeForm() {
     setSelectedStatus,
     setIsSaved,
     setIsSaving,
-    setError,
+    setSavingError,
   ]);
 
   const save = useCallback(async () => {
     try {
       setIsSaved(false);
       setIsSaving(true);
-      setError(null);
+      setSavingError(null);
 
       await sleep(2000);
 
@@ -476,7 +487,7 @@ export function CreateEmployeeForm() {
       setIsSaved(true);
       mutate();
     } catch(err: any) {
-      setError(err);
+      setSavingError(err);
     }
   }, [
     city,
@@ -491,7 +502,7 @@ export function CreateEmployeeForm() {
     phone,
     selectedDepartment,
     selectedStatus,
-    setError,
+    setSavingError,
     setIsSaved,
     setIsSaving,
     state,
@@ -508,12 +519,12 @@ export function CreateEmployeeForm() {
     if (isUpdating) return setDefaultProfilePicture(employee?.pictureURL as string);
 
     setDefaultProfilePicture(randomPicture());
-  }, [ isFormBusy, isUpdating ]);
+  }, [ employee, isFormBusy, isUpdating ]);
 
   return (
     <div>
-      {!isEmpty(error) ? (
-        <Error error={(error as JSON)} />
+      {!isEmpty(occurredErrors) ? (
+        <Error error={(occurredErrors as JSON)} />
       ) : saved ? (
         <Done reset={reset} />
       ) : (

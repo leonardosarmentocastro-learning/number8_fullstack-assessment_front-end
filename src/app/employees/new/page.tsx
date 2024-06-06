@@ -3,7 +3,6 @@
 import { CreateEmployeeForm } from '@/components/employees';
 
 export default function NewEmployeePage() {
-
   return (
     <div className='p-8 aria-busy:cursor-progress aria-busy:pointer-events-none'>
       <div className='mt-12 lg:mt-8'>

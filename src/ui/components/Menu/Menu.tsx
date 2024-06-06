@@ -9,9 +9,10 @@ export const Menu = ({ toggleMenu }: Props) => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isAtNewEmployee = pathname.includes('/employees/');
+  const isAtNewEmployee = pathname === '/employees/new';
+  const isAtViewEmployee = !isAtNewEmployee && pathname.includes('/employees/');
   const isAtViewAllEmployees = pathname === '/employees';
-  const employeeStartsExpanded = (isAtNewEmployee || isAtViewAllEmployees);
+  const employeeStartsExpanded = (isAtNewEmployee || isAtViewEmployee || isAtViewAllEmployees);
   const [ isEmployeesExpanded, setIsEmployeeExpanded ] = useState(employeeStartsExpanded);
   const toggleEmployeesItems = () => setIsEmployeeExpanded(prev => !prev);
 
@@ -47,9 +48,11 @@ export const Menu = ({ toggleMenu }: Props) => {
 
       <div
         className='flex flex-col border-b border-[rgba(217,217,217,.2)] cursor-pointer'
-        onClick={toggleEmployeesItems}
       >
-        <div className='p-8 flex flex-row gap-8'>
+        <div
+          className='p-8 flex flex-row gap-8'
+          onClick={toggleEmployeesItems}
+        >
           <span
             className="material-symbols-outlined w-[2.4rem] h-[2.4rem] text-[#fff]"
           >
@@ -78,11 +81,18 @@ export const Menu = ({ toggleMenu }: Props) => {
             >
               Create new
             </p>
+
             <p
               className={`pl-36 py-2 text-[1.4rem] text-[#fff] font-semibold ${isAtViewAllEmployees ? 'bg-[rgba(217,217,217,.2)]' : ''}`}
               onClick={goToViewEmployees}
             >
               View all
+            </p>
+
+            <p
+              className={`pl-36 py-2 text-[1.4rem] text-[#98A1A8] font-semibold ${isAtViewEmployee ? 'bg-[rgba(217,217,217,.2)]' : ''}`}
+            >
+              View employee
             </p>
           </div>
         )}
