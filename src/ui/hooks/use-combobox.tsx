@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react';
 
 import { SetTextInputError } from '../types';
@@ -165,6 +165,11 @@ export function useCombobox({
       searchKey,
     ]
   );
+
+  // Updates default value when relying on asynchronous data fetching.
+  useEffect(() => {
+    setSelectedValue(defaultValue);
+  }, [ defaultValue ]);
 
   return {
     Component,

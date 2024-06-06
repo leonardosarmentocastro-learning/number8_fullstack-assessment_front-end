@@ -3,14 +3,19 @@
 import Image from 'next/image';
 import dayjs from 'dayjs';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import {
   LoadingSpinner,
   useCombobox,
   useTextInput,
 } from '@/ui';
-import { API_BASE_URL, useFetchDepartments, Employee } from '@/data';
+import {
+  API_BASE_URL,
+  useFetchDepartments,
+  useFetchEmployee,
+} from '@/data';
 import { isEmpty } from '@/utils';
 import {
   evaluateForm,
@@ -25,25 +30,20 @@ import {
 } from './validators';
 import {
   ELEMENTS_BUSY_CLASSNAMES,
-  EMPLOYEE_DEFAULT_PROFILE_PICTURES,
   EMPLOYEE_STATUSES,
   EMPLOYEE_STATUS_OPTION_INACTIVE,
   FORM_BUSY_CLASSNAMES,
   PICTURE_BUSY_CLASSNAMES,
   VALIDATION_DATE_FORMAT,
 } from './constants';
-import { capitalizeWords, sleep } from './helpers';
+import { capitalizeWords, formatDate, randomPicture, sleep } from './helpers';
 import { Done } from './components/Done';
 import { Error } from './components/Error';
 
-type Props = {
-  employee?: Employee,
-  showSkeleton?: boolean,
-};
-export function CreateEmployeeForm({
-  employee,
-  showSkeleton = false,
-}: Props) {
+export function CreateEmployeeForm() {
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+
   // states
   /////
   const [ defaultProfilePicture, setDefaultProfilePicture ] = useState<string>('');
@@ -59,11 +59,18 @@ export function CreateEmployeeForm({
     isLoading: isFetchingDepartments,
   } = useFetchDepartments({ criteria: {}, limit: 100, page: 1 });
 
+  const {
+    data: employee,
+    error: employeeError,
+    isLoading: isFetchingEmployee,
+    mutate,
+  } = useFetchEmployee(params?.id);
+
   // memos
   /////
   const isFormBusy = useMemo(() => {
-    return isSaving || showSkeleton;
-  }, [ isSaving, showSkeleton ]);
+    return isSaving || isFetchingDepartments || isFetchingEmployee;
+  }, [ isSaving, isFetchingDepartments, isFetchingEmployee ]);
 
   // personal information form
   /////
@@ -235,8 +242,8 @@ export function CreateEmployeeForm({
   );
 
   const defaultDepartment = useMemo(
-    () => !isEmpty(employee?.department) ? employee?.department : null,
-    [ employee ]
+    () => !isEmpty(employee?.department) ? departments?.docs?.find(d => d.id === employee?.department?.id) : null,
+    [ departments, employee ]
   );
 
   const defaultStatus = useMemo(
@@ -333,9 +340,57 @@ export function CreateEmployeeForm({
     [ selectedStatus ]
   );
 
+  const reversedDepartmentHistory = useMemo(
+    () => Array.from(employee?.departmentHistory || []).reverse(),
+    [ employee ]
+  );
+
+  const hireDate = useMemo(
+    () => dayjs(hiringDate).valueOf(),
+    [ hiringDate ]
+  );
+
+  const newDepartmentHistory = useMemo(() => {
+    // It is a new employee. Thus, create a history with only one entry.
+    if (isEmpty(employee)) return [{
+      date: hireDate,
+      department: selectedDepartment?.id,
+    }];
+
+    // The employee has changed it's current department. Append a new entry to the history.
+    const hasChangedDepartment = (selectedDepartment?.id !== reversedDepartmentHistory[0].department.id);
+    const prevDepartmentHistorys = employee?.departmentHistory?.map(dh => ({
+      date: dh.date,
+      department: dh.department.id,
+    }));
+    if (hasChangedDepartment) {
+      const today = dayjs().startOf('day').valueOf();
+
+      return [
+        ...Array.from(prevDepartmentHistorys || []),
+        {
+          date: today,
+          department: selectedDepartment?.id,
+        }
+      ];
+    }
+
+    // The employee has not changed it's current department. Use the same history.
+    return prevDepartmentHistorys;
+  }, [
+    employee,
+    hireDate,
+    reversedDepartmentHistory,
+    selectedDepartment,
+  ]);
+
   // callbacks
   /////
   const reset = useCallback(() => {
+    if (isUpdating) return router.push('/employees/new');
+
+    setDefaultProfilePicture(randomPicture());
+
     setFirstName('');
     setLastName('');
     setPhone('');
@@ -352,6 +407,8 @@ export function CreateEmployeeForm({
     setIsSaving(false);
     setError({});
   }, [
+    isUpdating,
+    router,
     setFirstName,
     setLastName,
     setPhone,
@@ -383,11 +440,13 @@ export function CreateEmployeeForm({
         url: `${API_BASE_URL}/employees`,
         method: 'POST',
       };
+
       const response = await fetch(request.url, {
         body: JSON.stringify({
           firstName,
           lastName,
           phone,
+          hireDate,
           active: selectedStatus?.value,
           address: {
             city,
@@ -397,8 +456,8 @@ export function CreateEmployeeForm({
             zipCode,
             locale: 'en-US',
           },
-          department: selectedDepartment,
-          hireDate: dayjs(hiringDate).startOf('day').valueOf(),
+          department: selectedDepartment?.id,
+          departmentHistory: newDepartmentHistory,
           pictureURL: defaultProfilePicture,
         }),
         headers: {
@@ -415,6 +474,7 @@ export function CreateEmployeeForm({
 
       setIsSaving(false);
       setIsSaved(true);
+      mutate();
     } catch(err: any) {
       setError(err);
     }
@@ -423,9 +483,11 @@ export function CreateEmployeeForm({
     defaultProfilePicture,
     employee,
     firstName,
-    hiringDate,
+    hireDate,
     isUpdating,
     lastName,
+    mutate,
+    newDepartmentHistory,
     phone,
     selectedDepartment,
     selectedStatus,
@@ -442,11 +504,11 @@ export function CreateEmployeeForm({
   /////
   // Randomly selects a default profile picture.
   useEffect(() => {
+    if (isFormBusy) return;
     if (isUpdating) return setDefaultProfilePicture(employee?.pictureURL as string);
 
-    const randomPicture = EMPLOYEE_DEFAULT_PROFILE_PICTURES[Math.floor(Math.random() * EMPLOYEE_DEFAULT_PROFILE_PICTURES.length)];
-    setDefaultProfilePicture(randomPicture);
-  }, []);
+    setDefaultProfilePicture(randomPicture());
+  }, [ isFormBusy, isUpdating ]);
 
   return (
     <div>
@@ -470,7 +532,9 @@ export function CreateEmployeeForm({
                   src={defaultProfilePicture}
                   alt='Employee avatar'
                   className={`z-0 w-full h-full object-cover rounded-[.5rem] aria-busy:opacity-0 ${isInactive ? 'grayscale' : ''}`}
+                  sizes='14rem'
                   fill
+                  priority
                 />
               )}
 
@@ -545,16 +609,19 @@ export function CreateEmployeeForm({
               {StatusCombobox}
             </div>
 
-            {/* TODO: aria-busy */}
             {isUpdating && (
-              <div
-                // aria-busy={isFormBusy}
-                className='flex flex-col'
-              >
-                {/* TODO: aria-busy */}
-                <h1 className='text-[1.6rem] md:text-[2.4rem] text-[#98A1A8] font-semibold'>Department History</h1>
+              <div className='flex flex-col'>
+                <h1
+                  aria-busy={isFormBusy}
+                  className={`text-[1.6rem] md:text-[2.4rem] text-[#98A1A8] font-semibold ${ELEMENTS_BUSY_CLASSNAMES}`}
+                >
+                    Department History
+                  </h1>
 
-                <table className='text-[#fff] text-left text-[1.2rem] md:text-[1.4rem] font-semibold'>
+                <table
+                  aria-busy={isFormBusy}
+                  className={`text-[#fff] text-left text-[1.2rem] md:text-[1.4rem] font-semibold ${ELEMENTS_BUSY_CLASSNAMES}`}
+                >
                   <thead>
                     <tr className='border-b border-[#D9D9D9] md:text-[1.6rem]'>
                       <th className='px-4 py-3'>Date</th>
@@ -563,20 +630,12 @@ export function CreateEmployeeForm({
                   </thead>
 
                   <tbody>
-                    <tr className='border-t border-[rgba(217,217,217,.35)] bg-[rgba(217,217,217,.2)]'>
-                      <td className='px-4 py-3'>30/05/2024 23:00:00</td>
-                      <td className='px-4 py-3'>Technology</td>
-                    </tr>
-
-                    <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                      <td className='px-4 py-3'>30/05/2024 22:00:00</td>
-                      <td className='px-4 py-3'>Human resources</td>
-                    </tr>
-
-                    <tr className='border-t border-[rgba(217,217,217,.35)]'>
-                      <td className='px-4 py-3'>30/05/2024 21:00:00</td>
-                      <td className='px-4 py-3'>Finances</td>
-                    </tr>
+                    {reversedDepartmentHistory.map((dh, i) => (
+                      <tr key={i} className='border-t border-[rgba(217,217,217,.35)] first-of-type:bg-[rgba(217,217,217,.2)]'>
+                        <td className='px-4 py-3'>{formatDate(dh.date)}</td>
+                        <td className='px-4 py-3'>{dh.department.name}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

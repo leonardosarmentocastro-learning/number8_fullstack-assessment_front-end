@@ -1,4 +1,4 @@
-import React, { useCallback, useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { SetTextInputError, SetTextInputValue } from '../types';
 
@@ -152,6 +152,11 @@ export const useTextInput = ({
     placeholder,
     value,
   ]);
+
+  // Updates default value when relying on asynchronous data fetching.
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [ defaultValue ]);
 
   return {
     Component,

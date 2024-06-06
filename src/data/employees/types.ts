@@ -1,5 +1,8 @@
 import { PaginationResponse } from '../types';
+import { Department } from '../departments';
 
+export type DepartmentHistory = { date: Date, department: Department };
+export type EmployeeDepartmentHistory = Array<DepartmentHistory>;
 export type Employee = {
   active: Boolean,
   address: {
@@ -13,10 +16,8 @@ export type Employee = {
     streetNumber: Number,
     zipCode: string,
   },
-  department: {
-    id: string,
-    name: string,
-  },
+  department: Department,
+  departmentHistory: EmployeeDepartmentHistory,
   firstName: string,
   hireDate: Date,
   id: string,
