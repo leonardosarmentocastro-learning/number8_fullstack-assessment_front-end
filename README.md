@@ -1,7 +1,7 @@
 
 <div align="center">
   <a href="https://www.linkedin.com/in/nelasalvana/" target="_blank">
-    <img style='max-width: 120px;' src="https://cdn.number8.com/app/uploads/2024/05/number8-part-of-software-mind-logo-white.svg"alt="number8 logo" />
+    <img style='max-width: 120px;' width='120' height='120' src="https://cdn.number8.com/app/uploads/2024/05/number8-part-of-software-mind-logo-white.svg" alt="number8 logo" />
   </a>
 </div>
 
@@ -24,7 +24,7 @@
 
 <h3 align="center">Technologies used</h3>
 
-<div style='display: flex; flex-direction: row; gap: 10px; justify-content: center;'>
+<div align="center" style='display: flex; flex-direction: row; gap: 10px; justify-content: center;'>
   <img height="40" src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nodejs/nodejs-original.svg" alt="nodejs logo" />
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" height="40" alt="typescript logo"  />
   <img width='40px' src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" alt="react logo" />
