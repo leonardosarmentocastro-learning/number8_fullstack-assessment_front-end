@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
 import {
@@ -19,6 +20,8 @@ import {
 const EmployeesList = ({ pagination }: {
   pagination: Paginated<Employees>,
 }) => {
+  const router = useRouter();
+
   // dialog
   /////
   const [ deleteDataDialog, setDeleteDataDialog ] = useState({
@@ -82,6 +85,12 @@ const EmployeesList = ({ pagination }: {
     deleteEmployee,
   ]);
 
+  // navigation
+  /////
+  const goToViewEmployee = (employee: Employee) => () => {
+    router.push(`/employees/${employee.id}`);
+  };
+
   return (
     <section>
       <DeleteDataDialog
@@ -98,7 +107,7 @@ const EmployeesList = ({ pagination }: {
             employee={employee}
             key={employee.id}
             onRemoveButtonClick={openDeleteDataDialog(employee)}
-            onViewDetailsButtonClick={() => null}
+            onViewDetailsButtonClick={goToViewEmployee(employee)}
           />
         ))}
       </div>

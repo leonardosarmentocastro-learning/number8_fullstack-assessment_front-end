@@ -4,7 +4,7 @@ import { Transition } from '@headlessui/react'
 import { useState } from 'react';
 import Image from 'next/image';
 
-import { Menu } from '../components';
+import { Menu } from '@/ui/components';
 
 export default function RootTemplate ({ children }: { children: React.ReactNode }) {
   const [ showMenu, setShowMenu ] = useState(false);

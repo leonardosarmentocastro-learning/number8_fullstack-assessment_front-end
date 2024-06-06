@@ -2,6 +2,10 @@ import { MutatorCallback } from 'swr';
 
 type GenericObject = { [key:string]: any };
 
+export type ResponseError = {
+  code: string,
+  message: string,
+};
 export type PaginationError = {
   code: string,
   message: string,

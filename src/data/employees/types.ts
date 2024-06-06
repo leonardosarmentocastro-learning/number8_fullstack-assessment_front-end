@@ -14,6 +14,7 @@ export type Employee = {
     zipCode: string,
   },
   department: {
+    id: string,
     name: string,
   },
   firstName: string,

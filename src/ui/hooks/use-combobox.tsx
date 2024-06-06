@@ -17,6 +17,7 @@ type GenericArray = Array<ComboboxOption>;
 type Props = {
   classNames?: string,
   data: GenericArray | undefined,
+  defaultValue?: ComboboxOption | null,
   disabled?: boolean,
   isBusy?: boolean,
   label: string,
@@ -27,6 +28,7 @@ type Props = {
 export function useCombobox({
   classNames = '',
   data = [],
+  defaultValue = null,
   disabled = false,
   isBusy = false,
   label = '',
@@ -37,7 +39,7 @@ export function useCombobox({
   /////
   const [ error, setError ] = useState('');
   const [ query, setQuery ] = useState('');
-  const [ selectedValue, setSelectedValue ] = useState<ComboboxOption | null>(null);
+  const [ selectedValue, setSelectedValue ] = useState<ComboboxOption | null>(defaultValue);
 
   // callbacks
   /////
